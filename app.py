@@ -15,9 +15,8 @@ log_collection = db["logs"]
 users_collection = db["users"]
 
 # Admin Credentials
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "password"
-
+ADMIN_USERNAME = os.getenv('USER_NAME', 'your-default-usr')
+ADMIN_PASSWORD = os.getenv('PASSWORD', 'def_pass')
 
 @app.route("/", methods=["GET", "POST"])
 def login():
