@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Smart Toll System</title>
+    <style>
+        /* Global Styles */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            font-family: "JetBrains Mono", monospace;
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+
+        /* Header */
+        header {
+            background-color: #2c2c2c;
+            padding: 15px;
+            font-size: 20px;
+            text-align: center;
+        }
+
+        /* Center content */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Login Container */
+        .login-container {
+            background-color: #292929;
+            padding: 20px;
+            border-radius: 5px;
+            width: 320px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            font-size: 22px;
+            color: #ffcc00;
+        }
+
+        /* Error Message */
+        .error {
+            color: #ff5252;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        /* Input Fields */
+        .input-group {
+            position: relative;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            padding-right: 40px; /* Space for the eye button */
+            border: 1px solid #444;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+
+        /* Login Button */
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            background-color: #ffcc00;
+            color: black;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #ffd633;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #2c2c2c;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <header>Smart Toll System - Admin Login</header>
+
+    <main>
+        <div class="login-container">
+            <h2>Admin Login</h2>
+            {% if error %}
+                <p class="error">{{ error }}</p>
+            {% endif %}
+            <form method="POST">
+                <div class="input-group">
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" name="password" id="password" placeholder="Password" required>
+                </div>
+
+                <button type="submit">Login</button>
+            </form>
+        </div>
+    </main>
+
+    <footer>&copy; 2025 Smart Toll System</footer>
+</body>
+</html>

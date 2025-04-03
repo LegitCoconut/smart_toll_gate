@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Toll System Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <header>
+        <h3>SMART TOLL SYSTEM DASHBOARD</h3>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </header>
+
+    <main>
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchTab('log-panel')">📜 View Complete Log</button>
+            <button class="tab-btn" onclick="switchTab('user-log-panel')">🚗 View Personalized Log</button>
+        </div>
+
+        <div class="panel active" id="log-panel">
+            <h2>📜 Complete Log</h2>
+            <div class="table-container">
+                <table id="log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel" id="user-log-panel">
+            <h2>🚗 Personalized Log</h2>
+            <div class="section">
+                <label for="vehicle-dropdown">Select Vehicle:</label>
+                <select id="vehicle-dropdown">
+                    <option value="">-- Select Vehicle --</option>
+                </select>
+                <button onclick="fetchUserLogs()">View Logs</button>
+            </div>
+
+            <div class="table-container">
+                <table id="user-log-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+      
+    </main>
+
+   
+    <footer>
+        &copy; 2025 Smart Toll System. All rights reserved.
+    </footer>
+    
+
+    <script>
+        $(document).ready(function() {
+            loadLogs();
+            loadVehicles();
+        });
+
+        function switchTab(panelId) {
+            $(".panel").removeClass("active");
+            $(".tab-btn").removeClass("active");
+            $("#" + panelId).addClass("active");
+            $(`[onclick="switchTab('${panelId}')"]`).addClass("active");
+        }
+
+        function loadLogs() {
+            $.get("/logs", function(data) {
+                let tableBody = $("#log-table tbody");
+                tableBody.empty();
+                data.forEach(log => {
+                    tableBody.append(`<tr><td>${log.time}</td><td>${log.event}</td></tr>`);
+                });
+            });
+        }
+
+        function loadVehicles() {
+         $.get("/vehicles", function(data) {
+        let dropdown = $("#vehicle-dropdown");
+        dropdown.empty().append('<option value="">-- Select Vehicle --</option>');
+        
+        data.forEach(vehicle => {
+            dropdown.append(`<option value="${vehicle}">${vehicle}</option>`);
+        });
+    });
+}
+
+
+        function fetchUserLogs() {
+            let vehicle = $("#vehicle-dropdown").val();
+            if (!vehicle) return;
+
+            $.get(`/user_logs/${vehicle}`, function(data) {
+                let tableBody = $("#user-log-table tbody");
+                tableBody.empty();
+                data.forEach(log => {
+                    tableBody.append(`<tr><td>${log.time}</td><td>${log.event}</td></tr>`);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
