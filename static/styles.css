@@ -104,9 +104,17 @@ header {
     padding: 15px;
     border-radius: 8px;
     margin: 15px auto;
-    width: 50%;
+    width: 100%;
+    max-width: 800px;
     text-align: center;
+    box-sizing: border-box;
 }
+@media screen and (max-width: 768px) {
+    .section {
+        width: 90%;
+    }
+}
+
 
 .section label {
     font-size: 18px;

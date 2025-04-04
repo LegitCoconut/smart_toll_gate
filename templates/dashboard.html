@@ -15,12 +15,12 @@
 
     <main>
         <div class="tab-container">
-            <button class="tab-btn active" onclick="switchTab('log-panel')">📜 View Complete Log</button>
-            <button class="tab-btn" onclick="switchTab('user-log-panel')">🚗 View Personalized Log</button>
+            <button class="tab-btn active" onclick="switchTab('log-panel')">View Complete Log</button>
+            <button class="tab-btn" onclick="switchTab('user-log-panel')">Manage Vehices</button>
         </div>
 
         <div class="panel active" id="log-panel">
-            <h2>📜 Complete Log</h2>
+            <h2>Complete Log</h2>
             <div class="table-container">
                 <table id="log-table">
                     <thead>
@@ -35,7 +35,7 @@
         </div>
 
         <div class="panel" id="user-log-panel">
-            <h2>🚗 Personalized Log</h2>
+            <h2>Manage Vehicle Data</h2>
             <div class="section">
                 <label for="vehicle-dropdown">Select Vehicle:</label>
                 <select id="vehicle-dropdown">
@@ -43,7 +43,16 @@
                 </select>
                 <button onclick="fetchUserLogs()">View Logs</button>
             </div>
-
+            <details id="balance-section" style="margin-top: 10px; display: none;">
+                <summary style="cursor: pointer;">Recharge Balance</summary>
+                <div style="margin-top: 8px;">
+                    <label>Current Balance: ₹<span id="current-balance">0</span></label><br><br>
+                    <input type="number" id="balance-input" placeholder="Enter new balance">
+                    <button onclick="updateBalance()">Update</button>
+                    <span id="balance-status" style="margin-left:10px; color: limegreen;"></span>
+                </div>
+            </details>
+            
             <div class="table-container">
                 <table id="user-log-table">
                     <thead>
@@ -99,19 +108,54 @@
     });
 }
 
+function fetchUserLogs() {
+    let vehicle = $("#vehicle-dropdown").val();
+    if (!vehicle) return;
 
-        function fetchUserLogs() {
-            let vehicle = $("#vehicle-dropdown").val();
-            if (!vehicle) return;
+    $.get(`/user_logs/${vehicle}`, function(data) {
+        // Update logs
+        let tableBody = $("#user-log-table tbody");
+        tableBody.empty();
+        data.logs.forEach(log => {
+            tableBody.append(`<tr><td>${log.time}</td><td>${log.event}</td></tr>`);
+        });
 
-            $.get(`/user_logs/${vehicle}`, function(data) {
-                let tableBody = $("#user-log-table tbody");
-                tableBody.empty();
-                data.forEach(log => {
-                    tableBody.append(`<tr><td>${log.time}</td><td>${log.event}</td></tr>`);
-                });
-            });
+        // Update balance section
+        $("#current-balance").text(data.balance.toFixed(2));
+        $("#balance-input").val('');
+        $("#balance-status").text('');
+        $("#balance-section").show();
+    });
+}
+
+function updateBalance() {
+    let vehicle = $("#vehicle-dropdown").val();
+    let amount = parseFloat($("#balance-input").val());
+
+    if (!vehicle || isNaN(amount)) {
+        alert("Select a vehicle and enter a valid amount");
+        return;
+    }
+
+    $.ajax({
+        url: "/update_balance",
+        type: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ vehicle: vehicle, balance: amount }),
+        success: function(response) {
+            $("#balance-status").text(response.message).css("color", "limegreen");
+            $("#current-balance").text(response.new_balance.toFixed(2));
+            fetchUserLogs(); // reload logs to include new entry
+            loadLogs(); // reload global logs
+        },
+        error: function(xhr) {
+            const errMsg = xhr.responseJSON?.error || "Error updating balance";
+            $("#balance-status").text(errMsg).css("color", "red");
         }
+    });
+}
+    
+
     </script>
 </body>
 </html>

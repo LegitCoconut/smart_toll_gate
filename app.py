@@ -2,10 +2,11 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = "x230887898af"
 
 # MongoDB Setup
 MONGO_URI = os.getenv('MONGO_URI', 'your-default-mongo-uri')
@@ -65,16 +66,76 @@ def get_user_logs(vehicle):
     if not session.get("logged_in"):
         return jsonify({"error": "Unauthorized"}), 403
 
-    user = users_collection.find_one({"vehicle": vehicle}, {"logs": 1})  # No `_id`
-    
+    user = users_collection.find_one({"vehicle": vehicle}, {"logs": 1, "balance": 1})
+
     if user:
-        # Convert ObjectId inside logs if needed
-        for log in user["logs"]:
-            log["_id"] = str(log["_id"]) if "_id" in log else None  
+        logs = user.get("logs", [])
+        for log in logs:
+            log["_id"] = str(log["_id"]) if "_id" in log else None
+            # Parse time if it's a string
+            if isinstance(log.get("time"), str):
+                try:
+                    log["time"] = datetime.strptime(log["time"], "%Y-%m-%d %H:%M:%S")
+                except Exception:
+                    log["time"] = datetime.min  # fallback if parse fails
 
-        return jsonify(user["logs"])
+        logs.sort(key=lambda x: x.get("time", datetime.min), reverse=True)
 
-    return jsonify([])
+        # Convert datetime back to string for sending to frontend
+        for log in logs:
+            if isinstance(log.get("time"), datetime):
+                log["time"] = log["time"].strftime("%Y-%m-%d %H:%M:%S")
+
+        return jsonify({
+            "logs": logs,
+            "balance": user.get("balance", 0)
+        })
+
+    return jsonify({"logs": [], "balance": 0})
+
+
+
+
+@app.route("/update_balance", methods=["POST"])
+def update_balance():
+    if not session.get("logged_in"):
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+    vehicle = data.get("vehicle")
+    amount = data.get("balance")
+
+    if not vehicle or amount is None:
+        return jsonify({"error": "Invalid input"}), 400
+
+    user = users_collection.find_one({"vehicle": vehicle})
+    if not user:
+        return jsonify({"error": "Vehicle not found"}), 404
+
+    # Increment balance
+    new_balance = user.get("balance", 0) + amount
+    users_collection.update_one({"vehicle": vehicle}, {
+        "$set": {"balance": new_balance}
+    })
+
+    # Create log entry
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    log_entry = {
+        "time": now,
+        "event": f"Balance updated: ₹{amount:.2f} added. New Balance: ₹{new_balance:.2f}"
+    }
+
+    # Insert in personal log
+    users_collection.update_one({"vehicle": vehicle}, {
+        "$push": {"logs": log_entry}
+    })
+
+    # Insert in global log
+    log_collection.insert_one(log_entry)
+
+    return jsonify({"message": "Recgarge successfully", "new_balance": new_balance})
+
+
 
 @app.route("/logout")
 def logout():
@@ -83,4 +144,4 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
