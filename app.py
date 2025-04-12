@@ -19,42 +19,33 @@ users_collection = db["users"]
 ADMIN_USERNAME = os.getenv('USER_NAME', 'your-default-usr')
 ADMIN_PASSWORD = os.getenv('PASSWORD', 'def_pass')
 
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+#@app.route("/login", methods=["GET", "POST"])
+#def login():
+#    if request.method == "POST":
+#        username = request.form.get("username")
+#        password = request.form.get("password")
+#
+#        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+#            session["logged_in"] = True
+#            return redirect(url_for("dashboard"))
+#        else:
+#            return render_template("login.html", error="Invalid credentials")
+#a
+#    return render_template("login.html")
 
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-            session["logged_in"] = True
-            return redirect(url_for("dashboard"))
-        else:
-            return render_template("login.html", error="Invalid credentials")
 
-    return render_template("login.html")
-
-
-@app.route("/dashboard")
+@app.route("/")
 def dashboard():
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
-    
     return render_template("dashboard.html")
 
 
 @app.route("/logs")
 def get_logs():
-    if not session.get("logged_in"):
-        return jsonify({"error": "Unauthorized"}), 403
-
     logs = list(log_collection.find({}, {"_id": 0}).sort("time", -1)) 
     return jsonify(logs)
 
 @app.route("/vehicles")
 def get_vehicles():
-    if not session.get("logged_in"):
-        return jsonify({"error": "Unauthorized"}), 403
-
     vehicles = list(users_collection.find({}, {"_id": 0, "vehicle": 1}))  
     vehicle_list = [v["vehicle"] for v in vehicles if "vehicle" in v]
 
@@ -63,9 +54,6 @@ def get_vehicles():
 
 @app.route("/user_logs/<vehicle>")
 def get_user_logs(vehicle):
-    if not session.get("logged_in"):
-        return jsonify({"error": "Unauthorized"}), 403
-
     user = users_collection.find_one({"vehicle": vehicle}, {"logs": 1, "balance": 1})
 
     if user:
@@ -94,12 +82,8 @@ def get_user_logs(vehicle):
     return jsonify({"logs": [], "balance": 0})
 
 
-
-
 @app.route("/update_balance", methods=["POST"])
 def update_balance():
-    if not session.get("logged_in"):
-        return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
     vehicle = data.get("vehicle")
@@ -134,13 +118,6 @@ def update_balance():
     log_collection.insert_one(log_entry)
 
     return jsonify({"message": "Recgarge successfully", "new_balance": new_balance})
-
-
-
-@app.route("/logout")
-def logout():
-    session.pop("logged_in", None)
-    return redirect(url_for("login"))
 
 
 if __name__ == "__main__":
